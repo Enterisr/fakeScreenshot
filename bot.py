@@ -2,6 +2,7 @@ import logging
 import os
 import requests
 from telegram import Update
+from site_trust import get_trust_rating
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 
 # הגדרת לוגים כדי שתוכלי לראות שגיאות אם יהיו בריצה
@@ -12,7 +13,7 @@ logging.basicConfig(
 
 # הטוקן שלך
 TOKEN = "8827651845:AAFOMHLQbGzxqPGK8sT6_nEJFTUU3KU2mqU"
-BACKEND_URL = "http://localhost:8000/validate-screenshot/"
+BACKEND_URL = "http://localhost:8000/validate-screenshot"
 
 # פונקציה שתופעל כשהמשתמש כותב /start
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -48,11 +49,27 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     is_real = result["is_real"]
     confidence = int(result["confidence"] * 100)
-
+    sources = result.get("sources", [])
+    source_count = len(sources)
+#
     if is_real:
-        reply = f"✅ הידיעה נמצאה מהימנה!\nרמת ביטחון: {confidence}%"
+        reason = f"הטקסט שזוהה בתמונה נמצא ב-{source_count} מקורות חדשותיים מהימנים."
+        reply = f"✅ הידיעה נמצאה מהימנה!\nרמת ביטחון: {confidence}%\nסיבה: {reason}"
+        if sources:
+            reply += f"\n🔗 מקור: {sources[0]}"
+            trust = get_trust_rating(sources[0])
+            if trust:
+                reply += f"\n📊 דירוג אמינות האתר: {trust}"
     else:
-        reply = f"❌ אזהרה: כנראה מדובר בפייק ניוז!\nרמת ביטחון: {confidence}%"
+        if source_count == 0:
+            reason = "לא נמצאו מקורות חדשותיים התואמים לתוכן התמונה."
+        else:
+            reason = f"נמצאו {source_count} תוצאות, אך ההתאמה לתוכן התמונה נמוכה מדי."
+        reply = f"❌ אזהרה: כנראה מדובר בפייק ניוז!\nרמת ביטחון: {confidence}%\nסיבה: {reason}"
+        if sources:
+            trust = get_trust_rating(sources[0])
+            if trust:
+                reply += f"\n📊 דירוג אמינות האתר: {trust}"
 
     await update.message.reply_text(reply)
 

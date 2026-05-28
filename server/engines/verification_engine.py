@@ -157,11 +157,16 @@ class VerificationEngine:
                 if title_el is not None and link_el is not None:
                     # Google News titles often have " - Source" at the end
                     title = title_el.text or ""
+                    # <source url="https://publisher.com">Publisher Name</source>
+                    source_el = item.find("source")
+                    actual_url = source_el.attrib.get("url", "") if source_el is not None else ""
+                    source_name = source_el.text if source_el is not None else None
                     results.append(
                         SearchResult(
                             title=title,
-                            url=link_el.text or "",
+                            url=actual_url if actual_url else (link_el.text or ""),
                             snippet=description_el.text or "" if description_el is not None else "",
+                            source_name=source_name,
                         )
                     )
                     if len(results) >= self.num_results:
