@@ -1,0 +1,27 @@
+{
+  "manifest_version": 3,
+  "name": "Photo Uploader",
+  "version": "1.0.0",
+  "description": "Upload a photo from the extension popup and send it to an external server.",
+  "action": {
+    "default_title": "Photo Uploader",
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["http://*/*", "https://*/*", "file://*/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["worker.js"],
+      "matches": ["http://*/*", "https://*/*", "file://*/*"]
+    }
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "host_permissions": ["http://*/*", "https://*/*", "file://*/*"]
+}

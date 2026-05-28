@@ -1,0 +1,11 @@
+fastapi
+uvicorn
+easyocr
+requests
+python-multipart
+googlesearch-python
+python-dotenv
+Pillow
+pytest
+hypothesis
+httpx

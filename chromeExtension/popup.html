@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Photo Uploader</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <main class="app">
+      <section class="hero">
+        <p class="eyebrow">Chrome Extension</p>
+        <h1>Upload a photo</h1>
+        <p class="subtitle">Pick an image, preview it locally, and send it.</p>
+      </section>
+
+      <section class="panel">
+        <label class="field file-field">
+          <span>Photo</span>
+          <input id="photo" type="file" accept="image/*" />
+        </label>
+
+        <div class="preview-wrap">
+          <img id="preview" alt="Selected image preview" />
+          <div id="previewEmpty" class="preview-empty">
+            No image selected yet.
+          </div>
+        </div>
+
+        <button id="uploadBtn" class="primary" type="button">Send photo</button>
+        <p id="status" class="status" role="status" aria-live="polite"></p>
+      </section>
+    </main>
+
+    <script src="popup.js"></script>
+  </body>
+</html>

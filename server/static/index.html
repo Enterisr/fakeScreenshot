@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Fake News Screenshot Validator</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 700px; margin: 50px auto; padding: 20px; }
+        h1 { color: #333; }
+        #upload-form { margin: 30px 0; }
+        input[type="file"] { margin: 10px 0; }
+        button { background: #4CAF50; color: white; padding: 12px 24px; border: none; cursor: pointer; font-size: 16px; border-radius: 4px; }
+        button:hover { background: #45a049; }
+        button:disabled { background: #ccc; cursor: not-allowed; }
+        #result { margin-top: 30px; padding: 20px; border-radius: 8px; display: none; }
+        .real { background: #d4edda; border: 2px solid #28a745; }
+        .fake { background: #f8d7da; border: 2px solid #dc3545; }
+        .loading { background: #fff3cd; border: 2px solid #ffc107; }
+        #preview { max-width: 100%; max-height: 300px; margin: 10px 0; display: none; }
+        pre { background: #f4f4f4; padding: 10px; border-radius: 4px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>📰 Fake News Screenshot Validator</h1>
+    <p>Upload a news screenshot to check if it's real.</p>
+
+    <div id="upload-form">
+        <input type="file" id="file-input" accept="image/png,image/jpeg,image/webp">
+        <br>
+        <img id="preview" alt="Preview">
+        <br>
+        <button id="submit-btn" onclick="validate()" disabled>Validate Screenshot</button>
+    </div>
+
+    <div id="result"></div>
+
+    <script>
+        const fileInput = document.getElementById('file-input');
+        const preview = document.getElementById('preview');
+        const submitBtn = document.getElementById('submit-btn');
+        const resultDiv = document.getElementById('result');
+
+        fileInput.addEventListener('change', function() {
+            if (this.files && this.files[0]) {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                };
+                reader.readAsDataURL(this.files[0]);
+                submitBtn.disabled = false;
+            }
+        });
+
+        async function validate() {
+            const file = fileInput.files[0];
+            if (!file) return;
+
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Validating...';
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'loading';
+            resultDiv.innerHTML = '⏳ Processing image...';
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const response = await fetch('/validate-screenshot', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+
+                if (response.ok) {
+                    const icon = data.is_real ? '✅' : '❌';
+                    const label = data.is_real ? 'Likely Real' : 'Likely Fake';
+                    resultDiv.className = data.is_real ? 'real' : 'fake';
+                    resultDiv.innerHTML = `
+                        <h2>${icon} ${label}</h2>
+                        <p><strong>Confidence:</strong> ${(data.confidence * 100).toFixed(1)}%</p>
+                        <p><strong>Extracted Text:</strong> ${data.extracted_text || '(none)'}</p>
+                        ${data.sources && data.sources.length > 0 ? '<p><strong>Sources:</strong></p><ul>' + data.sources.map(s => `<li><a href="${s}" target="_blank">${s}</a></li>`).join('') + '</ul>' : ''}
+                        ${data.details ? '<p><strong>Details:</strong> ' + JSON.stringify(data.details) + '</p>' : ''}
+                        <details><summary>Raw JSON</summary><pre>${JSON.stringify(data, null, 2)}</pre></details>
+                    `;
+                } else {
+                    resultDiv.className = 'fake';
+                    resultDiv.innerHTML = `<h2>⚠️ Error</h2><pre>${JSON.stringify(data, null, 2)}</pre>`;
+                }
+            } catch (err) {
+                resultDiv.className = 'fake';
+                resultDiv.innerHTML = `<h2>⚠️ Error</h2><p>${err.message}</p>`;
+            }
+
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Validate Screenshot';
+        }
+    </script>
+</body>
+</html>
