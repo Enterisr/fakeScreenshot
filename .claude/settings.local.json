@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Remove-Item \"c:\\\\Users\\\\shira\\\\Documents\\\\degree\\\\Third_yer2\\\\semesterB\\\\hackathon\\\\fakeScreenshot\\\\server\\\\run.py\")"
+    ]
+  }
+}
